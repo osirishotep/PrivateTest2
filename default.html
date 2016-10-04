@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Board Game Queries</title>
+    <style></style>
+</head>
+<body>
+    <div>
+        <select id="selRegion"><option value="=CA">Canada</option></select>
+        <input id="tbQuery" type="text"/>
+        <input type="button" id="btnQuery" value="Search"/>
+        <!--<input type="button" id="btnCrawl" value="Crawl" />-->
+    </div>
+    
+    <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+    <script>
+        var wc = "$#Q#$";
+        var fnSearch = function () {
+            var q = $('#tbQuery').val();
+            if (!q || !q.trim().length) { $('#tbQuery').focus(); }
+            else
+            {
+                fnOpenTab(q);
+            }
+        }
+        var fnOpenTab = function(q)
+        {
+            var alerted = false;
+            var win;
+            $.map(jSites, function (o,i) {
+                var url = o.url.replace(wc, q.replace(' ', '+'));
+                win = window.open(url, '_blank');
+                if (!win && !alerted) {
+                    alert('Please allow popups for this website');
+                    var alerted = true;
+                }
+            });
+            
+            
+        }
+        var fnCrawlOne = function()
+        {
+            var q = $('#tbQuery').val();
+            if (!q || !q.trim().length) { $('#tbQuery').focus(); }
+            else
+            {
+                var url = jSites[2].url.replace(wc, q.replace(' ', '+'));
+              
+                $.get(url, function (data) {
+                    debugger;
+                });
+            }
+
+            
+        }
+        var jSites = [
+            { name: "boardgameprices", url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
+            { name: "quichegames", url: "https://quichegames.com/search?q=" + wc },
+            { name: "boardgamebliss", url: "http://www.boardgamebliss.com/search?q=" + wc },
+            { name: "greatboardgames", url: "http://www.greatboardgames.ca/catalogsearch/result/?q=" + wc },
+            { name: "starlitcitadel", url: "http://www.starlitcitadel.com/games/catalogsearch/result/?q=" + wc },
+            { name: "woodforsheep", url: "https://www.woodforsheep.ca/search?q=" + wc },
+            { name: "hitgames", url: "http://www.hitgames.ca/catalogsearch/result/index/?cat=4&q=" + wc },
+            { name: "snakesandlattes", url: "http://www.snakesandlattes.com/shop/products/search/?search=" + wc },
+            { name: "meeplemart", url: "http://www.meeplemart.com/store/Search.aspx?type=EXACT&searchTerms=" + wc },
+            { name: "boardagaingames", url: "http://boardagaingames.com/search?q=" + wc },
+            { name: "geekstopgames", url: "http://geekstopgames.com/gameSearch.php?search=" + wc },
+            { name: "playtimegames", url: "http://www.playtimegames.ca/catalog/advanced_search_result.php?keywords=" + wc },
+            { name: "castleboardgames", url: "http://castleboardgames.com/search?q=" + wc },
+            { name: "mindgames", url: "http://www.mindgames.ca/search?q=" + wc },
+            { name: "imaginaire", url: "http://www.imaginaire.com/indexv2.jsp?url=/recherchev2/avance2.jsp&langue=en&&cat1=JP&mot_cle=" + wc },
+            { name: "leValet", url: "http://www.levalet.com/en/catalogsearch/result/?q=" + wc },
+            { name: "infinijeux", url: "http://www.infinijeux.com/search?q=" + wc },
+            { name: "365games", url: "http://www.365games.co.uk/search/" + wc },
+            { name: "boardgames", url: "http://www.boardgames.ca/search.aspx?find=" + wc ,disabled:1}
+        ];
+
+        $(document).ready(function () {
+            $('#btnQuery').on('click', fnSearch);
+            $('#btnCrawl').on('click', fnCrawlOne);
+
+        });
+    </script>
+</body>
+
+</html>
