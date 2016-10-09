@@ -4,25 +4,297 @@
 <head>
     <meta charset="utf-8" />
     <title>Board Game Queries</title>
-    <style></style>
+    <style>
+    body{
+background-color: #a0a0a0
+    }
+    body>div{
+      margin: 0 auto;
+      background-color: white;
+      max-width: 640px;
+      padding:20px;
+      box-shadow: 2px 2px 5px black;
+      height: 100%;
+    }
+    ul{
+      list-style: none;-webkit-padding-start: 0px;
+    }
+    ul>li>span{vertical-align: top; margin-right: 4px}
+
+    .bgq-btn {
+      background-color: grey; color:white;cursor: pointer;border:1px solid #808080; padding:0.2em
+    }
+    .bgq-btn:hover{background-color: black}
+
+    #tbQuery{
+      font-size: 2em;
+      padding:0.2em;
+      width: 70%;
+
+    }
+    #btnQuery{
+      font-size: 2em;
+      width: 20% ;
+    }
+    #divHist,#divSearch,#ulSites {
+      display: flex;flex-flow: row wrap;
+      justify-content: space-between;
+      align-items: center;align-content:center;
+    }
+    #divHist>span, #ulSites>li{
+      flex-grow: 1;
+      position: relative;
+      display: inline-block;
+      -ms-flex-positive: 1;
+      align-self: flex-end;
+      cursor: pointer;
+      padding: 4px 24px 4px 4px;
+      background-color: #e0e0e0;
+      margin: 2px 4px;
+    }
+    #divHist>span:hover{background-color: black;color:white}
+    #divHist>span>a{
+      font-size: 1.4em;
+      display: inline-block;
+      vertical-align: middle;
+      text-align: center;
+      position: absolute;
+      right:0; top:0;
+      width: 20px; height: 100%;
+      background-color: grey;
+      color:white;
+
+
+    }
+    #divHist>span>a:hover{
+      background-color: #e0e0e0;color:black
+    }
+    #btnClearHist{margin-left: 4px}
+    .hidden{
+      display: none !important;
+    }
+
+    .tgl {display: none  }
+    .tgl, .tgl:after, .tgl:before, .tgl *, .tgl *:after, .tgl *:before, .tgl + .tgl-btn {      box-sizing: border-box;    }
+    .tgl::-moz-selection, .tgl:after::-moz-selection, .tgl:before::-moz-selection, .tgl *::-moz-selection, .tgl *:after::-moz-selection, .tgl *:before::-moz-selection, .tgl + .tgl-btn::-moz-selection {
+      background: none;
+    }
+    .tgl::selection, .tgl:after::selection, .tgl:before::selection, .tgl *::selection, .tgl *:after::selection, .tgl *:before::selection, .tgl + .tgl-btn::selection {
+      background: none;
+    }
+    .tgl + .tgl-btn {
+      outline: 0;
+      display: inline-block;
+      width: 4em;
+      height: 1.4em;
+      position: relative;
+      cursor: pointer;
+          vertical-align: middle;
+      -webkit-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+    }
+    .tgl + .tgl-btn:after, .tgl + .tgl-btn:before {
+      position: relative;
+      display: block;
+      content: "";
+      width: 50%;
+      height: 100%;
+    }
+    .tgl + .tgl-btn:after {
+      left: 0;
+    }
+    .tgl + .tgl-btn:before {
+      display: none;
+    }
+    .tgl:checked + .tgl-btn:after {
+      left: 50%;
+    }
+    .tgl-skewed + .tgl-btn {
+  overflow: hidden;
+  -webkit-transform: skew(-10deg);
+          transform: skew(-10deg);
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+  -webkit-transition: all .2s ease;
+  transition: all .2s ease;
+  font-family: sans-serif;
+  background: #b0b0b0;
+}
+.tgl-skewed + .tgl-btn:after, .tgl-skewed + .tgl-btn:before {
+  -webkit-transform: skew(10deg);
+          transform: skew(10deg);
+  display: inline-block;
+  -webkit-transition: all .2s ease;
+  transition: all .2s ease;
+  width: 100%;
+  text-align: center;
+  position: absolute;
+  line-height: 1.4em;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+.tgl-skewed + .tgl-btn:after {
+  left: 100%;
+  content: attr(data-tg-on);
+}
+.tgl-skewed + .tgl-btn:before {
+  left: 0;
+  content: attr(data-tg-off);
+}
+.tgl-skewed + .tgl-btn:active {
+  background: #888;
+}
+.tgl-skewed + .tgl-btn:active:before {
+  left: -10%;
+}
+.tgl-skewed:checked + .tgl-btn {
+  background: black;
+}
+.tgl-skewed:checked + .tgl-btn:before {
+  left: -100%;
+}
+.tgl-skewed:checked + .tgl-btn:after {
+  left: 0;
+}
+.tgl-skewed:checked + .tgl-btn:active:after {
+  left: 10%;
+}
+    @media (max-width: 600px) {
+#tbQuery,#btnQuery{width: 100%;}
+}
+    </style>
 </head>
 <body>
-    <div>
-        <select id="selRegion"><option value="=CA">Canada</option></select>
+  <div>
+    <div id="divSearch">
+        <!-- <select id="selRegion"><option value="=CA">Canada</option></select> -->
         <input id="tbQuery" type="text"/>
-        <input type="button" id="btnQuery" value="Search"/>
+        <input type="button" id="btnQuery" class="bgq-btn" value="Search"/>
         <!--<input type="button" id="btnCrawl" value="Crawl" />-->
     </div>
-    
+    <div>
+        <div><h3 style="display:inline-block" >History</h3><a style="display:inline-block" class="bgq-btn" id="btnClearHist">Clear all</a></div>
+          <div id="divHist">
+
+          </div>
+    </div>
+    <div>
+      <div><h3 style="display:inline-block" >Sites</h3>
+        <a style="display:inline-block" class="bgq-btn" id="btnTogAllSites">Toggle all</a>
+      </div>
+      <ul id="ulSites">
+
+      </ul>
+    </div>
+    <div>
+      <div><h3 style="display:inline-block" >Tabs</h3>
+        <a style="display:inline-block" class="bgq-btn" id="btnCloseAll">Close all</a>
+      </div>
+      </div>
+  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/json3/3.3.2/json3.min.js" ></script>
     <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
     <script>
         var wc = "$#Q#$";
+        var sLsName = "BGQ_HIST"
+        var sLs = localStorage.getItem(sLsName);
+        var sToggleAllDir = -1;
+        var ls = $.parseJSON(sLs);
+        if(ls==undefined){ ls= {history:[], sites:{ }};}
+
+        var fnDisplaySite = function(){
+          var ulSites = $('#ulSites').empty();
+          $.map(jSites,function(o){
+
+                var li = $('<li>')
+                .append('<span>'+o.name+'</span>')
+                .append($('<input type="checkbox" '+(ls.sites[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tgl_'+o.name+'">'))
+                .append('<label data-tg-off="OFF" data-tg-on="ON" for="tgl_'+o.name+'" class="tgl-btn"></label>');
+                li.appendTo(ulSites);
+                if(sToggleAllDir==-1&& !ls.sites[o.name]){ sToggleAllDir=1;}
+          });
+          $('#ulSites>li>input:checkbox').on('change',function(event){
+
+            var name = $(this).attr('data-tg-for');var b = $(this).is(':checked');
+            ls.sites[name]=b;
+            localStorage.setItem(sLsName,JSON.stringify(ls));
+          });
+        }
+        var fnDisplayHist = function(){
+          var divHist = $('#divHist').empty();
+          $.each(ls.history,function(i,o){
+             fnAddHistBtn(o, divHist);
+          });
+          if(!ls.history.length)
+          {
+            divHist.html('no search history.');
+
+          }
+          $('#btnClearHist').toggleClass('hidden',!ls.history.length);
+        }
+        var fnToggleAllSites = function()
+        {
+          $.each(ls.sites,function(k,v){ls.sites[k]=sToggleAllDir==1});
+          $('#ulSites>li>input:checkbox').prop('checked',sToggleAllDir==1);sToggleAllDir=-sToggleAllDir;
+          localStorage.setItem(sLsName,JSON.stringify(ls));
+        }
+        var fnAddHistBtn = function(q,container)
+        {
+          var spn = $('<span>').append($('<span>').text(q).on('click',function(){
+            fnOpenTab($(this).text());
+          })).append($('<a>').text('X').on('click',function(event){
+              event.stopPropagation();
+            if(fnRemoveHist(q)==1){
+              $(event.currentTarget).parent().remove();
+            }
+
+          })).appendTo(container);
+          return spn;
+        }
+        var fnRemoveHist = function(q)
+        {
+          var ind =ls.history.indexOf(q.toLowerCase());
+          if(ind>-1)
+          {
+              ls.history.splice(ind, 1);
+              localStorage.setItem(sLsName,JSON.stringify(ls));
+              return 1;
+          }
+          return 0;
+        }
+
+        var fnRemoveAllHist = function()
+        {
+          if(ls)
+          {
+            ls.history=[];
+            localStorage.setItem(sLsName,JSON.stringify(ls));
+          }
+          $('#divHist').empty().html('no search history.');
+            $('#btnClearHist').toggleClass('hidden',!ls.history.length);
+        }
+
         var fnSearch = function () {
-            var q = $('#tbQuery').val();
-            if (!q || !q.trim().length) { $('#tbQuery').focus(); }
+            var q = $('#tbQuery').val().trim().toLowerCase();
+
+            if (!q || !q.length) { $('#tbQuery').focus(); }
             else
             {
-                fnOpenTab(q);
+              if(ls.history.indexOf(q.toLowerCase())==-1){
+                ls.history.push(q);
+                ls.history.sort();
+                var sHist =  JSON.stringify(ls);
+                localStorage.setItem(sLsName, sHist);
+                fnDisplayHist();
+
+              }
+                $('#tbQuery').val('');
+
+             fnOpenTab(q);
+
             }
         }
         var fnOpenTab = function(q)
@@ -30,32 +302,40 @@
             var alerted = false;
             var win;
             $.map(jSites, function (o,i) {
-                var url = o.url.replace(wc, q.replace(' ', '+'));
-                win = window.open(url, '_blank');
-                if (!win && !alerted) {
+              if(ls.sites && ls.sites[o.name]){
+
+                var url = o.url.replace(wc, q.replaceAll(' ', '+'));
+                o.win = window.open(url, '_blank');
+                if (!o.win && !alerted) {
                     alert('Please allow popups for this website');
                     var alerted = true;
                 }
+              }
             });
-            
-            
+
+
         }
+        String.prototype.replaceAll = function(search, replacement) {
+          var target = this;
+          return target.replace(new RegExp(search, 'g'), replacement);
+      };
         var fnCrawlOne = function()
         {
             var q = $('#tbQuery').val();
             if (!q || !q.trim().length) { $('#tbQuery').focus(); }
             else
             {
-                var url = jSites[2].url.replace(wc, q.replace(' ', '+'));
-              
+                var url = jSites[2].url.replace(wc, q.replaceAll(' ', '+'));
+
                 $.get(url, function (data) {
-                    debugger;
+
                 });
             }
 
-            
+
         }
         var jSites = [
+            { name: "bgg", url:"https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=" + wc},
             { name: "boardgameprices", url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
             { name: "quichegames", url: "https://quichegames.com/search?q=" + wc },
             { name: "boardgamebliss", url: "http://www.boardgamebliss.com/search?q=" + wc },
@@ -73,15 +353,28 @@
             { name: "imaginaire", url: "http://www.imaginaire.com/indexv2.jsp?url=/recherchev2/avance2.jsp&langue=en&&cat1=JP&mot_cle=" + wc },
             { name: "leValet", url: "http://www.levalet.com/en/catalogsearch/result/?q=" + wc },
             { name: "infinijeux", url: "http://www.infinijeux.com/search?q=" + wc },
-            { name: "365games", url: "http://www.365games.co.uk/search/" + wc },
-            { name: "boardgames", url: "http://www.boardgames.ca/search.aspx?find=" + wc ,disabled:1}
+            { name: "365games", url: "http://www.365games.co.uk/board-games-and-card-games/refine-search/" + wc },
+            { name: "boardgames", url: "http://www.boardgames.ca/search.aspx?find=" + wc ,disabled:1},
+            { name: "cravingforagame", url: "http://www.cravingforagame.ca/index.php?p=catalog&mode=search&search_in=all&search_in=name&search_str=" + wc ,disabled:1}
         ];
 
         $(document).ready(function () {
+          $('#tbQuery').on('keyup',function(event){
+            if(event.keyCode=='13' || event.which=='13'){fnSearch()}
+          });
             $('#btnQuery').on('click', fnSearch);
             $('#btnCrawl').on('click', fnCrawlOne);
-
+            $('#btnClearHist').on('click', fnRemoveAllHist);
+            $('#btnTogAllSites').on('click',fnToggleAllSites);
+            $('#btnCloseAll').on('click',fnCloseAllTabs);
+              fnDisplayHist();
+              fnDisplaySite();
         });
+        function fnCloseAllTabs() {
+          $.each(jSites,function(i,o){
+            if(o.win){o.win.close();}
+          });
+        }
     </script>
 </body>
 
