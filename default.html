@@ -3,9 +3,9 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title>Board Game Queries</title>
+    <title>BGQ</title>
     <style>
-    body{
+    body{font-family: "Trebuchet MS"
 background-color: #a0a0a0
     }
     body>div{
@@ -36,22 +36,27 @@ background-color: #a0a0a0
       font-size: 2em;
       width: 20% ;
     }
-    #divHist,#divSearch,#ulSites {
+    #divHist,#divSearch,#ulSites,#divTabHist>ul {
       display: flex;flex-flow: row wrap;
       justify-content: space-between;
       align-items: center;align-content:center;
     }
-    #divHist>span, #ulSites>li{
+    #divHist>span, #ulSites>li,#divTabHist>ul>li {
       flex-grow: 1;
       position: relative;
       display: inline-block;
       -ms-flex-positive: 1;
       align-self: flex-end;
       cursor: pointer;
-      padding: 4px 24px 4px 4px;
+
       background-color: #e0e0e0;
       margin: 2px 4px;
+
     }
+    #divTabHist>ul>li>span{text-align: center}
+    #divTabHist>ul>li>span{display: block}
+      #divTabHist>ul>li>span>input{width:100%; display:block;text-align: right;border:1px solid #d0d0d0}
+    #divHist>span>span, #ulSites>li>span{    padding: 4px 32px 4px 4px;display:inline-block}
     #divHist>span:hover{background-color: black;color:white}
     #divHist>span>a{
       font-size: 1.4em;
@@ -66,8 +71,15 @@ background-color: #a0a0a0
 
 
     }
-    #divHist>span>a:hover{
-      background-color: #e0e0e0;color:black
+    #divHist>span>a.noPrice{background-color: #bbb}
+    #divHist>span>a.btnPrice{right:20px !important;}
+    #divHist>span>a:hover, .tgl + .tgl-btn:hover{
+      background-color: #a0a0a0 !important;
+      color:black !important;
+    }
+    .tgl:checked + .tgl-btn:hover
+    {
+      background-color: #808080 !important;
     }
     #btnClearHist{margin-left: 4px}
     .hidden{
@@ -83,11 +95,17 @@ background-color: #a0a0a0
       background: none;
     }
     .tgl + .tgl-btn {
+
+
       outline: 0;
       display: inline-block;
-      width: 4em;
-      height: 1.4em;
-      position: relative;
+      width: 2.1em;
+      height: 2em;
+      position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    line-height: 100%;
       cursor: pointer;
           vertical-align: middle;
       -webkit-user-select: none;
@@ -95,6 +113,7 @@ background-color: #a0a0a0
           -ms-user-select: none;
               user-select: none;
     }
+    .tgl + .tgl-btn.tgl-prc{right:2em}
     .tgl + .tgl-btn:after, .tgl + .tgl-btn:before {
       position: relative;
       display: block;
@@ -113,8 +132,7 @@ background-color: #a0a0a0
     }
     .tgl-skewed + .tgl-btn {
   overflow: hidden;
-  -webkit-transform: skew(-10deg);
-          transform: skew(-10deg);
+padding-top: 2px;
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
   -webkit-transition: all .2s ease;
@@ -123,8 +141,7 @@ background-color: #a0a0a0
   background: #b0b0b0;
 }
 .tgl-skewed + .tgl-btn:after, .tgl-skewed + .tgl-btn:before {
-  -webkit-transform: skew(10deg);
-          transform: skew(10deg);
+
   display: inline-block;
   -webkit-transition: all .2s ease;
   transition: all .2s ease;
@@ -162,6 +179,7 @@ background-color: #a0a0a0
 .tgl-skewed:checked + .tgl-btn:active:after {
   left: 10%;
 }
+
     @media (max-width: 600px) {
 #tbQuery,#btnQuery{width: 100%;}
 }
@@ -173,10 +191,12 @@ background-color: #a0a0a0
         <!-- <select id="selRegion"><option value="=CA">Canada</option></select> -->
         <input id="tbQuery" type="text"/>
         <input type="button" id="btnQuery" class="bgq-btn" value="Search"/>
-        <!--<input type="button" id="btnCrawl" value="Crawl" />-->
+
     </div>
     <div>
-        <div><h3 style="display:inline-block" >History</h3><a style="display:inline-block" class="bgq-btn" id="btnClearHist">Clear all</a></div>
+        <div><h3 style="display:inline-block" >History</h3><a style="display:inline-block" class="bgq-btn" id="btnClearHist">Clear all</a>
+          <a style="display:inline-block" class="bgq-btn hidden" id="btnUndo">Undo</a>
+        </div>
           <div id="divHist">
 
           </div>
@@ -200,28 +220,49 @@ background-color: #a0a0a0
     <script>
         var wc = "$#Q#$";
         var sLsName = "BGQ_HIST"
+
         var sLs = localStorage.getItem(sLsName);
         var sToggleAllDir = -1;
         var ls = $.parseJSON(sLs);
-        if(ls==undefined){ ls= {history:[], sites:{ }};}
 
+
+        if(ls==undefined  ){ ls= {history:[], sites:{ }, itemPrices:{}, sitePrices:{} };}
+        if(ls.history ==undefined) ls.history=[];
+        if(ls.sites ==undefined) ls.sites={ };
+        if(ls.itemPrices ==undefined) ls.itemPrices={ };
+        if(ls.sitePrices ==undefined) ls.sitePrices={ };
+        var df = $(document.createDocumentFragment());
         var fnDisplaySite = function(){
           var ulSites = $('#ulSites').empty();
-          $.map(jSites,function(o){
 
-                var li = $('<li>')
-                .append('<span>'+o.name+'</span>')
+          $.map(jSites,function(o){
+              if(ls.sites[o.name]==undefined)ls.sites[o.name]=true;
+                var li = $('<li>').append($('<span class="tglSites">')
+                .append('<span ><label for="tgl_'+o.name+'">'+o.name+'</label></span>')
                 .append($('<input type="checkbox" '+(ls.sites[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tgl_'+o.name+'">'))
-                .append('<label data-tg-off="OFF" data-tg-on="ON" for="tgl_'+o.name+'" class="tgl-btn"></label>');
-                li.appendTo(ulSites);
-                if(sToggleAllDir==-1&& !ls.sites[o.name]){ sToggleAllDir=1;}
+                .append('<label data-tg-off="☓" data-tg-on="🗸" for="tgl_'+o.name+'" class="tgl-btn " title="Toggle site opener"></label>'));
+                if(!o.noprice){
+                li.append($('<span  class="tglPrices">')
+                .append($('<input type="checkbox" '+(ls.sitePrices[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tglprc_'+o.name+'">'))
+                .append('<label data-tg-off="-" data-tg-on="$" for="tglprc_'+o.name+'" class="tgl-btn tgl-prc" title="Toggle price history"></label>'));}
+                li.appendTo(df);
+                if(sToggleAllDir==-1){ sToggleAllDir=1;}
           });
-          $('#ulSites>li>input:checkbox').on('change',function(event){
+          df.appendTo(ulSites);
+
+          $('#ulSites>li>span.tglSites>input:checkbox').on('change',function(event){
 
             var name = $(this).attr('data-tg-for');var b = $(this).is(':checked');
             ls.sites[name]=b;
             localStorage.setItem(sLsName,JSON.stringify(ls));
           });
+          $('#ulSites>li>span.tglPrices>input:checkbox').on('change',function(event){
+
+            var name = $(this).attr('data-tg-for');var b = $(this).is(':checked');
+            ls.sitePrices[name]=b;
+            localStorage.setItem(sLsName,JSON.stringify(ls));
+          });
+
         }
         var fnDisplayHist = function(){
           var divHist = $('#divHist').empty();
@@ -238,20 +279,28 @@ background-color: #a0a0a0
         var fnToggleAllSites = function()
         {
           $.each(ls.sites,function(k,v){ls.sites[k]=sToggleAllDir==1});
-          $('#ulSites>li>input:checkbox').prop('checked',sToggleAllDir==1);sToggleAllDir=-sToggleAllDir;
+          $('#ulSites>li>span.tglSites>input:checkbox').prop('checked',sToggleAllDir==1);sToggleAllDir=-sToggleAllDir;
           localStorage.setItem(sLsName,JSON.stringify(ls));
         }
         var fnAddHistBtn = function(q,container)
         {
-          var spn = $('<span>').append($('<span>').text(q).on('click',function(){
-            fnOpenTab($(this).text());
-          })).append($('<a>').text('X').on('click',function(event){
+          if(!container){container=$('#divHist');}
+          var spn = $('<span>').append($('<span>').text(q)).on('click',function(){
+            fnOpenTab(q);
+          }).append($('<a >').text('\u2A2F').on('click',function(event){
               event.stopPropagation();
             if(fnRemoveHist(q)==1){
               $(event.currentTarget).parent().remove();
             }
 
-          })).appendTo(container);
+
+          }));
+
+            spn.append($('<a class="btnPrice">').toggleClass('noPrice',!ls.itemPrices[q]||Object.keys( ls.itemPrices[q]).length==0).text('$').on('click',function(event){
+              event.stopPropagation();
+              fnOpenHistoryTab(q);
+             }));
+          spn.appendTo(container);
           return spn;
         }
         var fnRemoveHist = function(q)
@@ -261,6 +310,7 @@ background-color: #a0a0a0
           {
               ls.history.splice(ind, 1);
               localStorage.setItem(sLsName,JSON.stringify(ls));
+              fnCreateUndo('sh',q);
               return 1;
           }
           return 0;
@@ -268,6 +318,7 @@ background-color: #a0a0a0
 
         var fnRemoveAllHist = function()
         {
+          if(!confirm('Clear all search history items?')){return false;}
           if(ls)
           {
             ls.history=[];
@@ -294,7 +345,6 @@ background-color: #a0a0a0
                 $('#tbQuery').val('');
 
              fnOpenTab(q);
-
             }
         }
         var fnOpenTab = function(q)
@@ -319,24 +369,69 @@ background-color: #a0a0a0
           var target = this;
           return target.replace(new RegExp(search, 'g'), replacement);
       };
-        var fnCrawlOne = function()
-        {
-            var q = $('#tbQuery').val();
-            if (!q || !q.trim().length) { $('#tbQuery').focus(); }
-            else
-            {
-                var url = jSites[2].url.replace(wc, q.replaceAll(' ', '+'));
+      var divTabHist;
+      var fnOpenHistoryTab = function(q)
+      {$('#divTabHist').remove();
+         divTabHist = $('<div id="divTabHist">').append('<h4>'+q+'</h4>');
 
-                $.get(url, function (data) {
+        var f = $(document.createDocumentFragment());
 
-                });
+        $.each(ls.sitePrices ,function(k,v){
+          if(ls.sitePrices[k]){
+              var o = ls.itemPrices[q]?ls.itemPrices[q][k]||0:0;
+              var inp = $('<input type=text value="'+o+'"/>').on('blur',function(){
+                $(this).css('text-decoration',fnUpdateSiteItemPrice(k,q,$(this).val())?'':'line-through')
+                ;
+              });
+              var li  = $('<li>').append('<span>'+k+'</span>').append($('<span>').append(inp)).appendTo(f);
             }
+          });
 
+          f.appendTo($('<ul>').appendTo(divTabHist.appendTo($('body'))));
+          $('#divTabHist input').on('focus',function(event){$(event.currentTarget).select();})
 
+      }
+      var fnUpdateSiteItemPrice= function (site,item,price,status)
+      {
+        if(isNaN(price)){return false;}
+        if(ls.itemPrices[item]==undefined)ls.itemPrices[item]={};
+        if(price==''||parseFloat(price)==0){delete ls.itemPrices[item][site];}
+        else{ls.itemPrices[item][site]=price;}
+        fnUpdateItemPriceStatus(item);
+        var sHist =  JSON.stringify(ls);
+        localStorage.setItem(sLsName, sHist);
+        return true;
+      }
+      var fnUpdateItemPriceStatus = function(q)
+      {
+        var b = false;
+        if(Object.keys(ls.itemPrices[q]).length>0){
+        $.map(ls.itemPrices[q],function(v,k){
+            if(!isNaN(parseFloat(v)) && parseFloat(v)>0) b= true;
+            return false;
+          });
         }
+        $('#divHist>span>span').filter(function(){ return $(this).text().toLowerCase() === q;}).next().next().toggleClass('noPrice', !b);
+        if(!b){delete ls.itemPrices[q];}
+      }
+      var fnCreateUndo = function(type, q)
+      {
+        if(type=='sh')
+        {
+            $('#btnUndo').toggleClass('hidden',false).off('click').on('click',function(){
+              fnAddHistBtn(q);
+              if(ls.history.indexOf(q.toLowerCase())==-1){
+                ls.history.push(q);
+                ls.history.sort();
+                var sHist =  JSON.stringify(ls);
+                localStorage.setItem(sLsName, sHist);
+              }
+              $('#btnUndo').toggleClass('hidden',true)})
+        }
+      }
         var jSites = [
-            { name: "bgg", url:"https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=" + wc},
-            { name: "boardgameprices", url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
+            { name: "bgg", noprice:1, url:"https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=" + wc},
+            { name: "boardgameprices", noprice:1, url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
             { name: "quichegames", url: "https://quichegames.com/search?q=" + wc },
             { name: "boardgamebliss", url: "http://www.boardgamebliss.com/search?q=" + wc },
             { name: "greatboardgames", url: "http://www.greatboardgames.ca/catalogsearch/result/?q=" + wc },
@@ -359,16 +454,21 @@ background-color: #a0a0a0
         ];
 
         $(document).ready(function () {
+          var t0 = performance.now();
+
           $('#tbQuery').on('keyup',function(event){
             if(event.keyCode=='13' || event.which=='13'){fnSearch()}
           });
             $('#btnQuery').on('click', fnSearch);
-            $('#btnCrawl').on('click', fnCrawlOne);
+
             $('#btnClearHist').on('click', fnRemoveAllHist);
             $('#btnTogAllSites').on('click',fnToggleAllSites);
             $('#btnCloseAll').on('click',fnCloseAllTabs);
+
               fnDisplayHist();
               fnDisplaySite();
+              var t1 = performance.now();
+              console.log("Display sites took " +  (t1 - t0) + " milliseconds.")
         });
         function fnCloseAllTabs() {
           $.each(jSites,function(i,o){
