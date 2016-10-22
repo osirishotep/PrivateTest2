@@ -29,9 +29,12 @@ background-color: #a0a0a0
     #tbQuery{
       font-size: 2em;
       padding:0.2em;
-      width: 70%;
+      width: 60%;
 
-    }
+    }#btnCalc{
+ font-size: 2em;
+      width: 10% ;
+     }
     #btnQuery{
       font-size: 2em;
       width: 20% ;
@@ -56,9 +59,9 @@ background-color: #a0a0a0
     #divTabHist>ul>li>span{text-align: center}
     #divTabHist>ul>li>span{display: block}
       #divTabHist>ul>li>span>input{width:100%; display:block;text-align: right;border:1px solid #d0d0d0}
-    #divHist>span>span, #ulSites>li>span{    padding: 4px 32px 4px 4px;display:inline-block}
+    #divHist>span>span, #ulSites>li>span{    padding: 4px 40px 4px 4px;display:inline-block}
     #divHist>span:hover{background-color: black;color:white}
-    #divHist>span>a{
+    #divHist>span>a, #btnCloseCalc{
       font-size: 1.4em;
       display: inline-block;
       vertical-align: middle;
@@ -71,6 +74,9 @@ background-color: #a0a0a0
 
 
     }
+        #btnCloseCalc {
+           width: 30px; height:30px;cursor:pointer;
+        }
     #divHist>span>a.noPrice{background-color: #bbb}
     #divHist>span>a.btnPrice{right:20px !important;}
     #divHist>span>a:hover, .tgl + .tgl-btn:hover{
@@ -179,9 +185,37 @@ padding-top: 2px;
 .tgl-skewed:checked + .tgl-btn:active:after {
   left: 10%;
 }
+#divTblCalc{
+    position:fixed;
+    top:4px; left:4px;right:4px;
+    background:white;z-index:3000;
+
+}
+        #divTblCalc > ul {
+            display:table;
+        }
+            #divTblCalc > ul > li {
+                display:table-row;
+            }
+                #divTblCalc > ul > li:hover {
+                    background-color:#ddd
+                }
+            #divTblCalc > ul > li >span{
+                display:table-cell;border-bottom:1px solid #ddd;padding:2px 4px;
+            }
+            #divTblCalc > ul > li:nth-child(1)>span{ word-wrap:break-word;  }
+            #divTblCalc > ul > li  >span:not(:first-child)
+            {
+                width:10%;cursor:pointer;
+            }
+            #divTblCalc > ul > li  >span:not(:first-child).active
+            {
+                background-color:#aaa;color:white;
+            }
+
 
     @media (max-width: 600px) {
-#tbQuery,#btnQuery{width: 100%;}
+#tbQuery,#btnQuery,#btnCalc{width: 100%;}
 }
     </style>
 </head>
@@ -191,11 +225,13 @@ padding-top: 2px;
         <!-- <select id="selRegion"><option value="=CA">Canada</option></select> -->
         <input id="tbQuery" type="text"/>
         <input type="button" id="btnQuery" class="bgq-btn" value="Search"/>
-
+        <input type="button" id="btnCalc" class="bgq-btn" value="C" />
     </div>
     <div>
-        <div><h3 style="display:inline-block" >History</h3><a style="display:inline-block" class="bgq-btn" id="btnClearHist">Clear all</a>
+        <div><h3 style="display:inline-block" >History</h3>
+            <a style="display:inline-block" class="bgq-btn" id="btnClearHist">Clear all</a>
           <a style="display:inline-block" class="bgq-btn hidden" id="btnUndo">Undo</a>
+            <a style="display:inline-block" class="bgq-btn" id="btnDownload">Download</a>
         </div>
           <div id="divHist">
 
@@ -204,16 +240,17 @@ padding-top: 2px;
     <div>
       <div><h3 style="display:inline-block" >Sites</h3>
         <a style="display:inline-block" class="bgq-btn" id="btnTogAllSites">Toggle all</a>
+        <a style="display:inline-block" class="bgq-btn hidden" id="btnCloseAll">Close all opened tabs</a>
       </div>
       <ul id="ulSites">
 
       </ul>
     </div>
-    <div>
+    <!-- <div>
       <div><h3 style="display:inline-block" >Tabs</h3>
-        <a style="display:inline-block" class="bgq-btn" id="btnCloseAll">Close all</a>
+
       </div>
-      </div>
+      </div> -->
   </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/json3/3.3.2/json3.min.js" ></script>
     <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
@@ -224,7 +261,9 @@ padding-top: 2px;
         var sLs = localStorage.getItem(sLsName);
         var sToggleAllDir = -1;
         var ls = $.parseJSON(sLs);
-
+        var shorts = {};
+        var fees = {};
+        var fsThh = {};
 
         if(ls==undefined  ){ ls= {history:[], sites:{ }, itemPrices:{}, sitePrices:{} };}
         if(ls.history ==undefined) ls.history=[];
@@ -235,7 +274,8 @@ padding-top: 2px;
         var fnDisplaySite = function(){
           var ulSites = $('#ulSites').empty();
 
-          $.map(jSites,function(o){
+          $.map(jSites, function (o) {
+              if (o.short) { shorts[o.name] = o.short; } if (o.fee) { fees[o.name] = o.fee; } if (o.fsThreashold) { fsThh[o.name] = o.fsThreashold; }
               if(ls.sites[o.name]==undefined)ls.sites[o.name]=true;
                 var li = $('<li>').append($('<span class="tglSites">')
                 .append('<span ><label for="tgl_'+o.name+'">'+o.name+'</label></span>')
@@ -261,6 +301,8 @@ padding-top: 2px;
             var name = $(this).attr('data-tg-for');var b = $(this).is(':checked');
             ls.sitePrices[name]=b;
             localStorage.setItem(sLsName,JSON.stringify(ls));
+            var currShownHist = $('#divTabHist>h4').text();
+            if(currShownHist&&currShownHist.length)fnOpenHistoryTab(currShownHist);
           });
 
         }
@@ -308,9 +350,11 @@ padding-top: 2px;
           var ind =ls.history.indexOf(q.toLowerCase());
           if(ind>-1)
           {
+            $('#divTabHist').remove();
               ls.history.splice(ind, 1);
               localStorage.setItem(sLsName,JSON.stringify(ls));
               fnCreateUndo('sh',q);
+              fnDeleteGamePrices(q);
               return 1;
           }
           return 0;
@@ -360,6 +404,10 @@ padding-top: 2px;
                     alert('Please allow popups for this website');
                     var alerted = true;
                 }
+                else {
+                  $('#btnCloseAll').toggleClass('hidden',false);
+                }
+
               }
             });
 
@@ -419,40 +467,150 @@ padding-top: 2px;
         if(type=='sh')
         {
             $('#btnUndo').toggleClass('hidden',false).off('click').on('click',function(){
-              fnAddHistBtn(q);
+
               if(ls.history.indexOf(q.toLowerCase())==-1){
                 ls.history.push(q);
                 ls.history.sort();
+
+                if(objTempUndo[q]) {ls.itemPrices[q] = $.extend({},objTempUndo[q])};
+                  fnAddHistBtn(q);
                 var sHist =  JSON.stringify(ls);
                 localStorage.setItem(sLsName, sHist);
               }
-              $('#btnUndo').toggleClass('hidden',true)})
+              $('#btnUndo').toggleClass('hidden',true)}).prop('title','Undelete '+q);
+        }
+      }
+
+      var fnDisplayCalc = function()
+      {
+          var aItems = [];
+          var aSites = [];
+
+
+          $.each(ls.itemPrices, function (key, item) {
+              $.each(item, function (i, v) {
+                  if (!isNaN(v) && v > 0) {
+                      if (aItems.indexOf(key) == -1) { aItems.push(key); }
+                      if (aSites.indexOf(i) == -1) {  aSites.push(i); }
+                  }
+
+              });
+          });
+          var tbl = $('<ul>');
+        var df = $(document.createDocumentFragment());
+        var lihdr = $('<li data-tbl-item="header" class="li-hdr">').append('<span>').appendTo(tbl);
+        var liftrS = $('<li data-tbl-item="footer-s" class="li-hdr">').append('<span>Subtotal</span>').appendTo(tbl);
+        var liftrF = $('<li data-tbl-item="footer-f" class="li-hdr">').append('<span>Fee</span>').appendTo(tbl);
+        var liftrT = $('<li data-tbl-item="footer-t" class="li-hdr">').append('<span>Total</span>').appendTo(tbl);
+
+        $.map(aSites, function (v) {
+            lihdr.append('<span data-col="'+v+'">' + shorts[v] + '</span>'); liftrS.append('<span>' + 0 + '</span>');
+            liftrF.append('<span>' + fees[v] + '</span>');
+            liftrT.append('<span>' + 0 + '</span>');
+        })
+        lihdr.appendTo(tbl);
+
+        for(var i = 0; i<aItems.length;i++) {
+            var li = $('<li data-tbl-item="item">').append('<span>' +aItems[i] + '</span>');
+            $.map(aSites, function (v1 ) {
+                var p = ls.itemPrices[aItems[i]][v1];
+                if(p==undefined)p='';
+                li.append('<span>' +p + '</span>');
+            })
+            li.appendTo(tbl);
+        };
+        tbl.append(liftrS).append(liftrF).append(liftrT);
+
+        $('<div id="divTblCalc">').prepend($('<a id="btnCloseCalc">☓</a>').on('click', function () { $('#divTblCalc').remove(); })).append(tbl).appendTo(df);
+
+
+        $('body').prepend(df);
+
+        $('#divTblCalc>ul>li[data-tbl-item="item"]>span:gt(0)').on('click', function (event) {
+            var el = $(this);
+            if (el.html() == '') { el.toggleClass('active', false); } else {
+                el.toggleClass('active');
+                var i = el.index(); var subTotal = 0;
+                var div = $('#divTblCalc');
+                $.each($('>ul>li[data-tbl-item="item"]>span:nth-of-type(' + (i + 1) + ').active', div), function (i, o) {
+                    var val = $(o).text(); var iVal = 0; if (!isNaN(val)) { iVal = parseFloat(val); }
+                    subTotal += iVal;
+                });
+                var col = $('>ul>li[data-tbl-item="header"]>span:eq(' + i + ')',div).attr('data-col');
+                $('>ul>li[data-tbl-item="footer-s"]>span:eq(' + i + ')', div).text(subTotal.toFixed(2));
+                $('>ul>li[data-tbl-item="footer-f"]>span:eq(' + i + ')', div).text(subTotal > fsThh[col] ? 0 : fees[col].toFixed(2));
+                $('>ul>li[data-tbl-item="footer-t"]>span:eq(' + i + ')', div).text((
+                    parseFloat($('>ul>li[data-tbl-item="footer-s"]>span:eq(' + i + ')', div).text()) +
+                    parseFloat($('>ul>li[data-tbl-item="footer-f"]>span:eq(' + i + ')', div).text())).toFixed(2));
+            }
+
+
+        })
+      }
+      var objTempUndo={};
+      var fnDeleteGamePrices = function(game)
+      {
+        if(ls.itemPrices[game]){
+          objTempUndo[game] = $.extend({},ls.itemPrices[game]);
+          delete ls.itemPrices[game];
+          localStorage.setItem(sLsName,JSON.stringify(ls));
         }
       }
         var jSites = [
             { name: "bgg", noprice:1, url:"https://boardgamegeek.com/geeksearch.php?action=search&objecttype=boardgame&q=" + wc},
-            { name: "boardgameprices", noprice:1, url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
-            { name: "quichegames", url: "https://quichegames.com/search?q=" + wc },
-            { name: "boardgamebliss", url: "http://www.boardgamebliss.com/search?q=" + wc },
-            { name: "greatboardgames", url: "http://www.greatboardgames.ca/catalogsearch/result/?q=" + wc },
-            { name: "starlitcitadel", url: "http://www.starlitcitadel.com/games/catalogsearch/result/?q=" + wc },
-            { name: "woodforsheep", url: "https://www.woodforsheep.ca/search?q=" + wc },
-            { name: "hitgames", url: "http://www.hitgames.ca/catalogsearch/result/index/?cat=4&q=" + wc },
-            { name: "snakesandlattes", url: "http://www.snakesandlattes.com/shop/products/search/?search=" + wc },
-            { name: "meeplemart", url: "http://www.meeplemart.com/store/Search.aspx?type=EXACT&searchTerms=" + wc },
-            { name: "boardagaingames", url: "http://boardagaingames.com/search?q=" + wc },
-            { name: "geekstopgames", url: "http://geekstopgames.com/gameSearch.php?search=" + wc },
-            { name: "playtimegames", url: "http://www.playtimegames.ca/catalog/advanced_search_result.php?keywords=" + wc },
-            { name: "castleboardgames", url: "http://castleboardgames.com/search?q=" + wc },
-            { name: "mindgames", url: "http://www.mindgames.ca/search?q=" + wc },
-            { name: "imaginaire", url: "http://www.imaginaire.com/indexv2.jsp?url=/recherchev2/avance2.jsp&langue=en&&cat1=JP&mot_cle=" + wc },
-            { name: "leValet", url: "http://www.levalet.com/en/catalogsearch/result/?q=" + wc },
-            { name: "infinijeux", url: "http://www.infinijeux.com/search?q=" + wc },
-            { name: "365games", url: "http://www.365games.co.uk/board-games-and-card-games/refine-search/" + wc },
-            { name: "boardgames", url: "http://www.boardgames.ca/search.aspx?find=" + wc ,disabled:1},
-            { name: "cravingforagame", url: "http://www.cravingforagame.ca/index.php?p=catalog&mode=search&search_in=all&search_in=name&search_str=" + wc ,disabled:1}
+            { name: "boardgameprices",  noprice:1, url: "http://www.boardgameprices.com/compare-prices-for?q=" + wc },
+            { name: "boardgamebliss", short: "Bliss", url: "http://www.boardgamebliss.com/search?q=" + wc, fsThreashold: 200, fee: 11.95 },
+            { name: "greatboardgames", short: "Great", url: "http://www.greatboardgames.ca/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "apttogame", short: "ATG", url: "http://www.apttogame.com/index.php?route=product/search&search=" + wc, fsThreashold: 0, fee: 10 },
+            { name: "quichegames", short: "Quiche", url: "https://quichegames.com/search?q=" + wc , fsThreashold:200,fee:10},
+            { name: "woodforsheep", short: "WfS", url: "https://www.woodforsheep.ca/search?q=" + wc, fsThreashold: 200, fee: 14.75 },
+            { name: "meeplemart", short: "MM", url: "http://www.meeplemart.com/store/Search.aspx?type=EXACT&searchTerms=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "boardgames", short: "BGs", url: "http://www.boardgames.ca/search.aspx?find=" + wc, disabled: 1, fsThreashold: 9200, fee: 13.75 },
+            { name: "starlitcitadel", short: "SLC", url: "http://www.starlitcitadel.com/games/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "hitgames", short: "Hit", url: "http://www.hitgames.ca/catalogsearch/result/index/?cat=4&q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "snakesandlattes", short: "S&L", short: "", url: "http://www.snakesandlattes.com/shop/products/search/?search=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "boardagaingames", short: "BAG", url: "http://boardagaingames.com/search?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "geekstopgames", short: "GSG", url: "http://geekstopgames.com/gameSearch.php?search=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "playtimegames", short: "PTG", url: "http://www.playtimegames.ca/catalog/advanced_search_result.php?keywords=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "castleboardgames", short: "CBG", url: "http://castleboardgames.com/search?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "mindgames", short: "Mind", url: "http://www.mindgames.ca/search?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "imaginaire", short: "IMG", url: "http://www.imaginaire.com/indexv2.jsp?url=/recherchev2/avance2.jsp&langue=en&&cat1=JP&mot_cle=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "leValet", short: "VAL", url: "http://www.levalet.com/en/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "infinijeux", short: "INF", url: "http://www.infinijeux.com/search?q=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "365games", short: "365", url: "http://www.365games.co.uk/board-games-and-card-games/refine-search/" + wc, fsThreashold: 200, fee: 10 },
+            { name: "cravingforagame", short: "CFaG", url: "http://www.cravingforagame.ca/index.php?p=catalog&mode=search&search_in=all&search_in=name&search_str=" + wc, disabled: 1, fsThreashold: 200, fee: 10 }
         ];
+        var fnDownLoadUserData = function(){
+              var textFile = null, makeTextFile = function (text) {
+                var data = new Blob([text], {type: 'text/plain'});
 
+                // If we are replacing a previously generated file we need to
+                // manually revoke the object URL to avoid memory leaks.
+                if (textFile !== null) {
+                    window.URL.revokeObjectURL(textFile);
+                }
+                textFile = window.URL.createObjectURL(data);
+
+               // returns a URL you can use as a href
+                return textFile;
+           };
+          var ssLs = localStorage.getItem('BGQ_HIST');
+          var filename = 'BGQ_' + new Date()+'.txt';
+
+          var link = document.createElement('a');
+          link.setAttribute('download', filename);
+          link.href = makeTextFile(ssLs);
+          document.body.appendChild(link);
+
+          // wait for the link to be added to the document
+          window.requestAnimationFrame(function () {
+            var event = new MouseEvent('click');
+            link.dispatchEvent(event);
+            document.body.removeChild(link);
+          });
+
+
+        }
         $(document).ready(function () {
           var t0 = performance.now();
 
@@ -460,11 +618,11 @@ padding-top: 2px;
             if(event.keyCode=='13' || event.which=='13'){fnSearch()}
           });
             $('#btnQuery').on('click', fnSearch);
-
+            $('#btnDownload').on('click', fnDownLoadUserData);
             $('#btnClearHist').on('click', fnRemoveAllHist);
             $('#btnTogAllSites').on('click',fnToggleAllSites);
             $('#btnCloseAll').on('click',fnCloseAllTabs);
-
+            $('#btnCalc').on('click',               fnDisplayCalc);
               fnDisplayHist();
               fnDisplaySite();
               var t1 = performance.now();
@@ -474,6 +632,7 @@ padding-top: 2px;
           $.each(jSites,function(i,o){
             if(o.win){o.win.close();}
           });
+          $('#btnCloseAll').toggleClass('hidden',true);
         }
     </script>
 </body>
