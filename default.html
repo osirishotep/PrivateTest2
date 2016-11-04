@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>BGQ</title>
     <style>
-    body{font-family: "Trebuchet MS"
+    body{font-family: "Trebuchet MS";
 background-color: #a0a0a0
     }
     body>div{
@@ -16,7 +16,7 @@ background-color: #a0a0a0
       box-shadow: 2px 2px 5px black;
       height: 100%;
     }
-    ul{
+    ul{padding-left: 0;
       list-style: none;-webkit-padding-start: 0px;
     }
     ul>li>span{vertical-align: top; margin-right: 4px}
@@ -280,7 +280,7 @@ padding-top: 2px;
                 var li = $('<li>').append($('<span class="tglSites">')
                 .append('<span ><label for="tgl_'+o.name+'">'+o.name+'</label></span>')
                 .append($('<input type="checkbox" '+(ls.sites[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tgl_'+o.name+'">'))
-                .append('<label data-tg-off="☓" data-tg-on="🗸" for="tgl_'+o.name+'" class="tgl-btn " title="Toggle site opener"></label>'));
+                .append('<label data-tg-off="☓" data-tg-on="✓" for="tgl_'+o.name+'" class="tgl-btn " title="Toggle site opener"></label>'));
                 if(!o.noprice){
                 li.append($('<span  class="tglPrices">')
                 .append($('<input type="checkbox" '+(ls.sitePrices[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tglprc_'+o.name+'">'))
