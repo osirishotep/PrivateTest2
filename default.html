@@ -5,22 +5,24 @@
     <meta charset="utf-8" />
     <title>BGQ</title>
     <style>
-    body{font-family: "Trebuchet MS";
+    body{font-family: "Trebuchet MS"
 background-color: #a0a0a0
     }
     body>div{
       margin: 0 auto;
       background-color: white;
-      max-width: 640px;
+      max-width: 800px;
       padding:20px;
       box-shadow: 2px 2px 5px black;
       height: 100%;
     }
-    ul{padding-left: 0;
+    ul{
       list-style: none;-webkit-padding-start: 0px;
     }
     ul>li>span{vertical-align: top; margin-right: 4px}
-
+    .bgq-newItem{
+      outline: 3px black solid;
+    }
     .bgq-btn {
       background-color: grey; color:white;cursor: pointer;border:1px solid #808080; padding:0.2em
     }
@@ -87,7 +89,7 @@ background-color: #a0a0a0
     {
       background-color: #808080 !important;
     }
-    #btnClearHist{margin-left: 4px}
+    #btnClearHist,#btnClearPrice{margin-left: 4px}
     .hidden{
       display: none !important;
     }
@@ -192,7 +194,7 @@ padding-top: 2px;
 
 }
         #divTblCalc > ul {
-            display:table;
+            display:table;width:100%;
         }
             #divTblCalc > ul > li {
                 display:table-row;
@@ -212,7 +214,11 @@ padding-top: 2px;
             {
                 background-color:#aaa;color:white;
             }
-
+            #divTblCalc > ul > li[data-tbl-item="footer-s"]
+            {
+              font-weight: bold;
+              background-color:#d0d0d0;
+            }
 
     @media (max-width: 600px) {
 #tbQuery,#btnQuery,#btnCalc{width: 100%;}
@@ -280,7 +286,7 @@ padding-top: 2px;
                 var li = $('<li>').append($('<span class="tglSites">')
                 .append('<span ><label for="tgl_'+o.name+'">'+o.name+'</label></span>')
                 .append($('<input type="checkbox" '+(ls.sites[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tgl_'+o.name+'">'))
-                .append('<label data-tg-off="☓" data-tg-on="✓" for="tgl_'+o.name+'" class="tgl-btn " title="Toggle site opener"></label>'));
+                .append('<label data-tg-off="☓" data-tg-on="🗸" for="tgl_'+o.name+'" class="tgl-btn " title="Toggle site opener"></label>'));
                 if(!o.noprice){
                 li.append($('<span  class="tglPrices">')
                 .append($('<input type="checkbox" '+(ls.sitePrices[o.name]?'checked':'' )+'  data-tg-for="'+o.name+'" class="tgl tgl-skewed" id="tglprc_'+o.name+'">'))
@@ -306,10 +312,11 @@ padding-top: 2px;
           });
 
         }
-        var fnDisplayHist = function(){
+        var fnDisplayHist = function(q){
           var divHist = $('#divHist').empty();
           $.each(ls.history,function(i,o){
-             fnAddHistBtn(o, divHist);
+             var b = fnAddHistBtn(o, divHist);
+             if(o==q){b.addClass('bgq-newItem');}
           });
           if(!ls.history.length)
           {
@@ -383,7 +390,7 @@ padding-top: 2px;
                 ls.history.sort();
                 var sHist =  JSON.stringify(ls);
                 localStorage.setItem(sLsName, sHist);
-                fnDisplayHist();
+                fnDisplayHist(q);
 
               }
                 $('#tbQuery').val('');
@@ -417,10 +424,24 @@ padding-top: 2px;
           var target = this;
           return target.replace(new RegExp(search, 'g'), replacement);
       };
+      var fnClearPrice = function(q)
+      {
+        $('input:text',divTabHist).val('');
+        if(ls.itemPrices[q] && typeof(ls.itemPrices[q])=='object')
+        {
+          delete ls.itemPrices[q];
+          var sHist =  JSON.stringify(ls);
+          localStorage.setItem(sLsName, sHist);
+          $('#divHist>span>span').filter(function(){ return $(this).text().toLowerCase() === q;}).next().next().toggleClass('noPrice', true);
+        }
+      }
       var divTabHist;
       var fnOpenHistoryTab = function(q)
       {$('#divTabHist').remove();
-         divTabHist = $('<div id="divTabHist">').append('<h4>'+q+'</h4>');
+         divTabHist = $('<div id="divTabHist">').append('<h4 style="display:inline-block">'+q+'</h4>')
+         .append($('<a class="bgq-btn" id="btnClearPrice">Clear Prices</a>')
+         .on('click', function(){fnClearPrice(q);})
+       );
 
         var f = $(document.createDocumentFragment());
 
@@ -562,13 +583,17 @@ padding-top: 2px;
             { name: "boardgamebliss", short: "Bliss", url: "http://www.boardgamebliss.com/search?q=" + wc, fsThreashold: 200, fee: 11.95 },
             { name: "greatboardgames", short: "Great", url: "http://www.greatboardgames.ca/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
             { name: "apttogame", short: "ATG", url: "http://www.apttogame.com/index.php?route=product/search&search=" + wc, fsThreashold: 0, fee: 10 },
-            { name: "quichegames", short: "Quiche", url: "https://quichegames.com/search?q=" + wc , fsThreashold:200,fee:10},
-            { name: "woodforsheep", short: "WfS", url: "https://www.woodforsheep.ca/search?q=" + wc, fsThreashold: 200, fee: 14.75 },
-            { name: "meeplemart", short: "MM", url: "http://www.meeplemart.com/store/Search.aspx?type=EXACT&searchTerms=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "boardgameshelf", short: "Shelf", url: "http://www.boardgameshelf.com/search.php?search_query=" + wc, fsThreashold: 200, fee: 10 },
             { name: "boardgames", short: "BGs", url: "http://www.boardgames.ca/search.aspx?find=" + wc, disabled: 1, fsThreashold: 9200, fee: 13.75 },
+            { name: "365games", short: "365", url: "http://www.365games.co.uk/board-games-and-card-games/refine-search/" + wc, fsThreashold: 200, fee: 10 },
+            { name: "woodforsheep", short: "WfS", url: "https://www.woodforsheep.ca/search?q=" + wc, fsThreashold: 200, fee: 14.75 },
+            { name: "quichegames", short: "Quiche", url: "https://quichegames.com/search?q=" + wc , fsThreashold:200,fee:10},
+            { name: "amazon.de", short: "amz.de", url: "https://www.amazon.de/s?rh=n%3A12950651%2Cn%3A360472031%2Ck%3A" + wc, fsThreashold: 64, fee: 10 },
+            { name: "amazon.ca", short: "amz.ca", url: "https://www.amazon.ca/gp/search?rh=n%3A6742111011%2Ck%3A" + wc, fsThreashold: 64, fee: 10 },
+            { name: "meeplemart", short: "MM", url: "http://www.meeplemart.com/store/Search.aspx?type=EXACT&searchTerms=" + wc, fsThreashold: 200, fee: 10 },
             { name: "starlitcitadel", short: "SLC", url: "http://www.starlitcitadel.com/games/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
             { name: "hitgames", short: "Hit", url: "http://www.hitgames.ca/catalogsearch/result/index/?cat=4&q=" + wc, fsThreashold: 200, fee: 10 },
-            { name: "snakesandlattes", short: "S&L", short: "", url: "http://www.snakesandlattes.com/shop/products/search/?search=" + wc, fsThreashold: 200, fee: 10 },
+            { name: "snakesandlattes", short: "S&L",  url: "http://www.snakesandlattes.com/shop/products/search/?search=" + wc, fsThreashold: 200, fee: 10 },
             { name: "boardagaingames", short: "BAG", url: "http://boardagaingames.com/search?q=" + wc, fsThreashold: 200, fee: 10 },
             { name: "geekstopgames", short: "GSG", url: "http://geekstopgames.com/gameSearch.php?search=" + wc, fsThreashold: 200, fee: 10 },
             { name: "playtimegames", short: "PTG", url: "http://www.playtimegames.ca/catalog/advanced_search_result.php?keywords=" + wc, fsThreashold: 200, fee: 10 },
@@ -577,8 +602,9 @@ padding-top: 2px;
             { name: "imaginaire", short: "IMG", url: "http://www.imaginaire.com/indexv2.jsp?url=/recherchev2/avance2.jsp&langue=en&&cat1=JP&mot_cle=" + wc, fsThreashold: 200, fee: 10 },
             { name: "leValet", short: "VAL", url: "http://www.levalet.com/en/catalogsearch/result/?q=" + wc, fsThreashold: 200, fee: 10 },
             { name: "infinijeux", short: "INF", url: "http://www.infinijeux.com/search?q=" + wc, fsThreashold: 200, fee: 10 },
-            { name: "365games", short: "365", url: "http://www.365games.co.uk/board-games-and-card-games/refine-search/" + wc, fsThreashold: 200, fee: 10 },
             { name: "cravingforagame", short: "CFaG", url: "http://www.cravingforagame.ca/index.php?p=catalog&mode=search&search_in=all&search_in=name&search_str=" + wc, disabled: 1, fsThreashold: 200, fee: 10 }
+
+
         ];
         var fnDownLoadUserData = function(){
               var textFile = null, makeTextFile = function (text) {
